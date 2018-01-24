@@ -1,0 +1,11 @@
+{
+  "presets": [
+    ["env"]
+  ],
+  "plugins": [
+    "transform-decorators-legacy",
+    "syntax-dynamic-import",
+    "transform-class-properties",
+    "transform-object-rest-spread"
+  ]
+}
