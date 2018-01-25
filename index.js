@@ -1,4 +1,3 @@
-// import fetch from "isomorphic-fetch";
 import fetch from "node-fetch";
 import { URL, URLSearchParams } from "url";
 import proxyAgent from 'https-proxy-agent'
@@ -11,13 +10,7 @@ const debugOption = {
   agent: new proxyAgent("http://127.0.0.1:8123")
 }
 
-// let cmsRoot = "http://e0d41ab0.ngrok.io/";
 let cmsRoot = 'http://cmsservice.100bt.com/';
-
-
-async function goindex() {
-  return await fetch(cmsRoot, isDebug ? { ...debugOption } : {});
-}
 
 async function login(userName, password) {
   let url = `${cmsRoot}sysmanager/login.html`;
@@ -33,7 +26,17 @@ async function login(userName, password) {
       "Content-Type": "application/x-www-form-urlencoded"
     }
   }
-  return await fetch(url, isDebug ? { ...debugOption, ...arg } : arg).then(v => v.text());
+  return await fetch(url, isDebug ? { ...debugOption, ...arg } : arg)
+    .then(v => {
+      return new Promise((res, rej) => {
+        v.text().then(html => {
+          res({
+            html,
+            headers: v.headers
+          });
+        })
+      })
+    });
 }
 
 async function queryCategoryById(categoryId) {
@@ -54,22 +57,20 @@ let token = "";
 
 export default async function main() {
   try {
-    let c = await goindex();
+    let c = await login("dev", "222222");
     let w = setCookie(c.headers.get("set-cookie"))[0];
     token = [w.name, w.value].join("=");
+
+    if (c.html.search("请输入用户名和密码")==-1) {
+      console.log(`登录成功：${token}`);
+      try {
+        let c = await queryCategoryById(20870);
+        console.log(c);
+      } catch (e) {
+        console.log("信息获取失败");
+      }
+    }
   } catch (e) {
-    throw e;
-  }
-  try {
-    let c = await login("dev", "222222");
-    console.log(c);
-  } catch (e) {
-    console.log(e);
-  }
-  try {
-    let c = await queryCategoryById(20870);
-    console.log(c);
-  } catch (e) {
-    console.log(e);
+    console.log("登录失败!!", e);
   }
 }
